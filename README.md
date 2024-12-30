@@ -21,7 +21,8 @@
 - **Method**: `POST`
 - **Request Body**:
 
-  ```{
+  ```
+  {
     "upstreams": [
       {
         "ipaddress": "192.168.100.101",
