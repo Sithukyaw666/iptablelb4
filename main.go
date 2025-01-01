@@ -19,7 +19,7 @@ func main() {
 		apiGroup.GET("/list", handler.ListRule)
 		apiGroup.POST("/update", handler.UpdateRule)
 		apiGroup.POST("/add", handler.AddRule)
-		apiGroup.GET("/delete", handler.DeleteRule)
+		apiGroup.POST("/delete", handler.DeleteRule)
 	}
 
 	router.Run()

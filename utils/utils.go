@@ -25,12 +25,11 @@ func GenerateIptablerules(index, length int, localIp, dip, dport, algorithm stri
 
 	if algorithm == "round-robin" {
 		ingress = []string{
-			"-d", localIp,
 			"-p", "tcp",
-			"-match", "statistic",
+			"--match", "statistic",
 			"--mode", "nth",
 			"--every", traffic,
-			"--dport", "80",
+			"--dport", dport,
 			"--packet", "0",
 			"-j", "DNAT",
 			"--to-destination", destination,
@@ -38,9 +37,8 @@ func GenerateIptablerules(index, length int, localIp, dip, dport, algorithm stri
 
 	} else {
 		ingress = []string{
-			"-d", localIp,
 			"-p", "tcp",
-			"-match", "statistic",
+			"--match", "statistic",
 			"--mode", "random",
 			"--probability", probability,
 			"--dport", "80",
@@ -69,4 +67,14 @@ func GetLocalIPs() ([]string, error) {
 		}
 	}
 	return ips, nil
+}
+
+func IsPredefinedChain(chain string) bool {
+	predefinedChains := []string{"INPUT", "OUTPUT", "PREROUTING", "POSTROUTING", "DOCKER"}
+	for _, pChain := range predefinedChains {
+		if chain == pChain {
+			return true
+		}
+	}
+	return false
 }
