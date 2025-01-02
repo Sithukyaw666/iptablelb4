@@ -1,12 +1,12 @@
 package model
 
-type upstreams struct {
+type Upstreams struct {
 	IpAddress string `json:"ipaddress"`
 	Port      string `json:"port"`
 }
 
-type Rules struct {
-	Upstreams  []upstreams `json:"upstreams"`
+type Request struct {
+	Upstreams  []Upstreams `json:"upstreams"`
 	Algorithm  string      `json:"algorithm"`
 	ServerFarm string      `json:"server-farm"`
 }

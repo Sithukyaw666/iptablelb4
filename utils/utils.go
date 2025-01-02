@@ -3,10 +3,10 @@ package utils
 import (
 	"fmt"
 	"math"
-	"net"
+	"regexp"
 )
 
-func GenerateIptablerules(index, length int, localIp, dip, dport, algorithm string) ([]string, []string) {
+func GenerateIptablerules(index, length int, dip, dport, algorithm string) ([]string, []string) {
 
 	destination := fmt.Sprintf("%s:%s", dip, dport)
 
@@ -19,8 +19,7 @@ func GenerateIptablerules(index, length int, localIp, dip, dport, algorithm stri
 		"-p", "tcp",
 		"-m", "tcp",
 		"--dport", dport,
-		"-j", "SNAT",
-		"--to-source", localIp,
+		"-j", "MASQUERADE",
 	}
 
 	if algorithm == "round-robin" {
@@ -51,24 +50,6 @@ func GenerateIptablerules(index, length int, localIp, dip, dport, algorithm stri
 
 }
 
-func GetLocalIPs() ([]string, error) {
-	var ips []string
-	addresses, err := net.InterfaceAddrs()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, addr := range addresses {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				// Convert net.IP to string and append
-				ips = append(ips, ipnet.IP.String())
-			}
-		}
-	}
-	return ips, nil
-}
-
 func IsPredefinedChain(chain string) bool {
 	predefinedChains := []string{"INPUT", "OUTPUT", "PREROUTING", "POSTROUTING", "DOCKER"}
 	for _, pChain := range predefinedChains {
@@ -77,4 +58,23 @@ func IsPredefinedChain(chain string) bool {
 		}
 	}
 	return false
+}
+
+func ExtractModeAndDestination(input string) (string, string, string, error) {
+	// Regular expression to match --mode
+	modeRegex := regexp.MustCompile(`--mode\s+(\w+)`)
+	modeMatch := modeRegex.FindStringSubmatch(input)
+	if len(modeMatch) < 2 {
+		return "", "", "", fmt.Errorf("mode not found")
+	}
+
+	// Regular expression to match --to-destination IP and port
+	destRegex := regexp.MustCompile(`--to-destination\s+(\d+\.\d+\.\d+\.\d+):(\d+)`)
+	destMatch := destRegex.FindStringSubmatch(input)
+	if len(destMatch) < 3 {
+		return "", "", "", fmt.Errorf("destination not found")
+	}
+
+	// Return the extracted values
+	return modeMatch[1], destMatch[1], destMatch[2], nil
 }

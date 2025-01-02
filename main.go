@@ -16,10 +16,11 @@ func main() {
 	apiGroup := router.Group("/api/v1/iptables")
 	{
 		apiGroup.GET("/health", handler.HealthCheck)
-		apiGroup.GET("/list", handler.ListRule)
+		apiGroup.GET("/list", handler.ListFarm)
+		apiGroup.GET("/list/:farm", handler.ListFarmByName)
 		apiGroup.POST("/update", handler.UpdateRule)
 		apiGroup.POST("/add", handler.AddRule)
-		apiGroup.POST("/delete", handler.DeleteRule)
+		apiGroup.POST("/delete/:farm", handler.DeleteRule)
 	}
 
 	router.Run()

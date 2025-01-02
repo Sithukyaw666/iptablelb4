@@ -32,7 +32,7 @@ func (ipt *iptableHandler) HealthCheck(c *gin.Context) {
 
 func (ipt *iptableHandler) AddRule(c *gin.Context) {
 
-	request := new(model.Rules)
+	request := new(model.Request)
 
 	if err := c.ShouldBindJSON(request); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -43,7 +43,6 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 
 	chainName := request.ServerFarm
 
-	ipLists, _ := utils.GetLocalIPs()
 	if ok, _ := ipt.ipt.ChainExists("nat", chainName); ok {
 		logrus.Error("Chain name %s already exists", chainName)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -52,18 +51,18 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 	}
 
 	if err := ipt.ipt.NewChain("nat", chainName); err != nil {
-		logrus.Error("Can't add new chain")
+		logrus.Error("Can't add new chain", err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
 			"Error": "Cannot add the new chain",
 		})
 	}
-	if err := ipt.ipt.AppendUnique("nat", "PREROUTING", "-d", ipLists[0], "-j", chainName); err != nil {
-		logrus.Error("Can't append new chain")
+	if err := ipt.ipt.AppendUnique("nat", "PREROUTING", "-j", chainName); err != nil {
+		logrus.Error("Can't append new chain", err)
 		return
 	}
 	upStreamLength := len(request.Upstreams)
 	for i, server := range request.Upstreams {
-		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, ipLists[0], server.IpAddress, server.Port, request.Algorithm)
+		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, server.IpAddress, server.Port, request.Algorithm)
 		if err := ipt.ipt.AppendUnique("nat", chainName, ingress...); err != nil {
 			logrus.Error("Can't append ingress rule to iptables", err)
 			return
@@ -75,13 +74,13 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"Response": "iptables configured successfully",
+		"Data": "loadbalancing rule configured successfully",
 	})
 }
 
-func (ipt *iptableHandler) ListRule(c *gin.Context) {
+func (ipt *iptableHandler) ListFarm(c *gin.Context) {
 	chains, err := ipt.ipt.ListChains("nat")
-
+	var serverFarms []string
 	if err != nil {
 		logrus.Error(err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -91,17 +90,56 @@ func (ipt *iptableHandler) ListRule(c *gin.Context) {
 	for _, chain := range chains {
 		logrus.Info(chain)
 		if !utils.IsPredefinedChain(chain) {
-			c.IndentedJSON(http.StatusOK, gin.H{
-				"Data": chain,
-			})
-
+			serverFarms = append(serverFarms, chain)
 		}
 	}
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"Data": serverFarms,
+	})
 
 }
+
+func (ipt *iptableHandler) ListFarmByName(c *gin.Context) {
+	chainName := c.Param("farm")
+	rules, err := ipt.ipt.List("nat", chainName)
+	if err != nil {
+		logrus.Error("Can't read the chain in the iptables")
+		return
+	}
+	response := new(model.Request)
+	var algorithm string
+	for _, rule := range rules[1:] {
+		mode, ip, port, err := utils.ExtractModeAndDestination(rule)
+		if err != nil {
+			logrus.Error("Can't extract the required fields", err)
+		}
+		upstream := new(model.Upstreams)
+
+		upstream.IpAddress = ip
+		upstream.Port = port
+
+		response.Upstreams = append(response.Upstreams, *upstream)
+
+		if mode == "nth" {
+			algorithm = "round-robin"
+		} else {
+			algorithm = mode
+		}
+
+	}
+
+	response.ServerFarm = chainName
+	response.Algorithm = algorithm
+
+	c.IndentedJSON(http.StatusOK, gin.H{
+		"Data": response,
+	})
+
+}
+
 func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 
-	request := new(model.Rules)
+	request := new(model.Request)
 	if err := c.ShouldBindJSON(request); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{
 			"Error": err.Error(),
@@ -109,7 +147,6 @@ func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 		return
 	}
 
-	ipLists, _ := utils.GetLocalIPs()
 	chainName := request.ServerFarm
 
 	if err := ipt.ipt.ClearChain("nat", chainName); err != nil {
@@ -117,7 +154,7 @@ func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 	}
 	upStreamLength := len(request.Upstreams)
 	for i, server := range request.Upstreams {
-		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, ipLists[0], server.IpAddress, server.Port, request.Algorithm)
+		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, server.IpAddress, server.Port, request.Algorithm)
 		if err := ipt.ipt.AppendUnique("nat", chainName, ingress...); err != nil {
 			logrus.Error("Can't append ingress rule to iptables", err)
 			return
@@ -129,21 +166,14 @@ func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": "Updated Data",
+		"Data": "Loadbalancing rule updated successfully",
 	})
 }
 func (ipt *iptableHandler) DeleteRule(c *gin.Context) {
 
-	request := new(model.Rules)
-	if err := c.ShouldBindJSON(request); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
-		})
-		return
-	}
-	ipLists, _ := utils.GetLocalIPs()
-	chainName := request.ServerFarm
-	if err := ipt.ipt.DeleteIfExists("nat", "PREROUTING", "-d", ipLists[0], "-j", chainName); err != nil {
+	chainName := c.Param("farm")
+
+	if err := ipt.ipt.DeleteIfExists("nat", "PREROUTING", "-j", chainName); err != nil {
 		logrus.Error(err)
 	}
 	if err := ipt.ipt.ClearChain("nat", chainName); err != nil {
@@ -155,6 +185,6 @@ func (ipt *iptableHandler) DeleteRule(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": "Deleted Data",
+		"Data": "Loadbalancing rule deleted successfully",
 	})
 }

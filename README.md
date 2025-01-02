@@ -1,6 +1,6 @@
 # Iptablelb4
 
-**iptablelb4** is a Layer 4 TCP load balancer built using Linux's `iptables` utilities. The project provides a straightforward API to manage load balancing rules for TCP traffic between backend servers. Users can easily configure backend server IP addresses, application ports, and select a load balancing algorithm (either Round Robin or Random). While the API currently supports basic operations for managing load balancing configurations, the functionality to directly apply `iptables` rules is still under development. The API offers a user-friendly interface that simplifies the configuration of TCP traffic distribution across multiple servers, eliminating the need to manually work with complex `iptables` rules.
+**iptablelb4** is a Layer 4 TCP load balancer built using Linux's `iptables` utilities. The project provides a straightforward API to manage load balancing rules for TCP traffic between backend servers. Users can easily configure backend server IP addresses, application ports, and select a load balancing algorithm (either Round Robin or Random). The API offers a user-friendly interface that simplifies the configuration of TCP traffic distribution across multiple servers, eliminating the need to manually work with complex `iptables` rules.
 
 ## Features
 
@@ -14,39 +14,123 @@
 #### `/api/v1/iptables/health`
 
 - **Method**: `GET`
-- **Response**: `{ "ping": "pong" }`
+- **Response**:
+```json
+{
+    "ping": "pong"
+}
+```
 
 #### `/api/v1/iptables/add`
 
 - **Method**: `POST`
 - **Request Body**:
 
-  ```
-  {
-    "upstreams": [
-      {
-        "ipaddress": "192.168.100.101",
-        "port": "8080"
-      }
-    ],
-    "algorithm": "round-robin"
-  }
+```json
+{
+    "Data": {
+        "upstreams": [
+            {
+                "ipaddress": "192.168.100.110",
+                "port": "8080"
+            },
+            {
+                "ipaddress": "192.168.100.111",
+                "port": "8080"
+            }
+        ],
+        "algorithm": "round-robin",
+        "server-farm": "web-server"
+    }
+}
+```
 
-  ```
+- **Response**: 
 
-- **Response**: TBD
+```json
+{
+    "Data": "Loadbalancing rule configured successfully"
+}
+```
 
 #### `/api/v1/iptables/list`
 
 - **Method**: `GET`
-- TBD
+- **Response**:
+
+```json
+{
+    "Data": [
+        "web-server"
+    ]
+}
+```
+
+#### `/api/v1/iptables/list/<farm>`
+
+- **Method**: `GET`
+- **Response**:
+
+```json
+{
+    "Data": {
+        "upstreams": [
+            {
+                "ipaddress": "192.168.100.110",
+                "port": "8080"
+            },
+            {
+                "ipaddress": "192.168.100.111",
+                "port": "8080"
+            }
+        ],
+        "algorithm": "round-robin",
+        "server-farm": "web-server"
+    }
+}
+```
+
+
 
 #### `/api/v1/iptables/update`
 
 - **Method**: `POST`
-- TBD
+- **Request Body**:
 
-#### `/api/v1/iptables/delete`
+```json
+{
+    "Data": {
+        "upstreams": [
+            {
+                "ipaddress": "192.168.100.110",
+                "port": "8080"
+            },
+            {
+                "ipaddress": "192.168.100.111",
+                "port": "8080"
+            }
+        ],
+        "algorithm": "round-robin",
+        "server-farm": "web-server"
+    }
+}
+```
+
+- **Response**: 
+
+```json
+{
+    "Data": "Loadbalancing rule updated successfully"
+}
+```
+#### `/api/v1/iptables/delete/<farm>`
 
 - **Method**: `POST`
-- TBD
+- **Response**:
+
+```json
+{
+    "Data": "Loadbalancing rule deleted successfully"
+}
+```
+
