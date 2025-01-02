@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -16,7 +17,11 @@ type iptableHandler struct {
 
 func NewiptableHandler() (*iptableHandler, error) {
 	ipt, err := iptables.New()
+
 	if err != nil {
+		return nil, err
+	}
+	if err := utils.EnableIPForwarding(); err != nil {
 		return nil, err
 	}
 	return &iptableHandler{ipt: ipt}, nil
@@ -35,9 +40,7 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 	request := new(model.Request)
 
 	if err := c.ShouldBindJSON(request); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
-		})
+		utils.StandardResponse(c, http.StatusBadRequest, "error", err.Error(), nil)
 		return
 	}
 
@@ -45,16 +48,15 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 
 	if ok, _ := ipt.ipt.ChainExists("nat", chainName); ok {
 		logrus.Error("Chain name %s already exists", chainName)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"Error": "Chain already exists",
-		})
+		response := fmt.Sprintf("Chain name: %s already exists", chainName)
+		utils.StandardResponse(c, http.StatusBadRequest, "error", response, nil)
 	}
 
 	if err := ipt.ipt.NewChain("nat", chainName); err != nil {
 		logrus.Error("Can't add new chain", err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"Error": "Cannot add the new chain",
-		})
+		response := fmt.Sprintf("Cannot add new chain: %s", chainName)
+		utils.StandardResponse(c, http.StatusBadRequest, "error", response, nil)
+
 	}
 	if err := ipt.ipt.AppendUnique("nat", "PREROUTING", "-j", chainName); err != nil {
 		logrus.Error("Can't append new chain", err)
@@ -72,10 +74,8 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 			return
 		}
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": "loadbalancing rule configured successfully",
-	})
+	response := fmt.Sprintf("Loadbalancing rule for %s configured successfully", chainName)
+	utils.StandardResponse(c, http.StatusOK, "success", response, nil)
 }
 
 func (ipt *iptableHandler) ListFarm(c *gin.Context) {
@@ -83,20 +83,15 @@ func (ipt *iptableHandler) ListFarm(c *gin.Context) {
 	var serverFarms []string
 	if err != nil {
 		logrus.Error(err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"Error": "Can't read the iptables list",
-		})
+		response := fmt.Sprintf("%v", err)
+		utils.StandardResponse(c, http.StatusRequestTimeout, "error", response, nil)
 	}
 	for _, chain := range chains {
-		logrus.Info(chain)
 		if !utils.IsPredefinedChain(chain) {
 			serverFarms = append(serverFarms, chain)
 		}
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": serverFarms,
-	})
-
+	utils.StandardResponse(c, http.StatusOK, "success", "Listed all the backend server farms", serverFarms)
 }
 
 func (ipt *iptableHandler) ListFarmByName(c *gin.Context) {
@@ -131,19 +126,14 @@ func (ipt *iptableHandler) ListFarmByName(c *gin.Context) {
 	response.ServerFarm = chainName
 	response.Algorithm = algorithm
 
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": response,
-	})
-
+	utils.StandardResponse(c, http.StatusOK, "success", "Listed all the backend servers", response)
 }
 
 func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 
 	request := new(model.Request)
 	if err := c.ShouldBindJSON(request); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
-		})
+		utils.StandardResponse(c, http.StatusBadRequest, "error", err.Error(), nil)
 		return
 	}
 
@@ -164,10 +154,8 @@ func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 			return
 		}
 	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": "Loadbalancing rule updated successfully",
-	})
+	response := fmt.Sprintf("Loadbalancing rule for %s updated successfully", chainName)
+	utils.StandardResponse(c, http.StatusOK, "success", response, nil)
 }
 func (ipt *iptableHandler) DeleteRule(c *gin.Context) {
 
@@ -184,7 +172,7 @@ func (ipt *iptableHandler) DeleteRule(c *gin.Context) {
 		logrus.Error(err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{
-		"Data": "Loadbalancing rule deleted successfully",
-	})
+	response := fmt.Sprintf("Loadbalancing rule for %s deleted successfully", chainName)
+
+	utils.StandardResponse(c, http.StatusOK, "success", response, nil)
 }

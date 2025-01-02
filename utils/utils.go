@@ -3,7 +3,10 @@ package utils
 import (
 	"fmt"
 	"math"
+	"os"
 	"regexp"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GenerateIptablerules(index, length int, dip, dport, algorithm string) ([]string, []string) {
@@ -40,7 +43,7 @@ func GenerateIptablerules(index, length int, dip, dport, algorithm string) ([]st
 			"--match", "statistic",
 			"--mode", "random",
 			"--probability", probability,
-			"--dport", "80",
+			"--dport", dport,
 			"-j", "DNAT",
 			"--to-destination", destination,
 		}
@@ -77,4 +80,27 @@ func ExtractModeAndDestination(input string) (string, string, string, error) {
 
 	// Return the extracted values
 	return modeMatch[1], destMatch[1], destMatch[2], nil
+}
+func EnableIPForwarding() error {
+	filePath := "/proc/sys/net/ipv4/ip_forward"
+
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("could not open %s for writing: %v", filePath, err)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString("1\n")
+	if err != nil {
+		return fmt.Errorf("could not write to %s: %v", filePath, err)
+	}
+
+	return nil
+}
+func StandardResponse(c *gin.Context, statusCode int, status string, message string, data interface{}) {
+	c.JSON(statusCode, gin.H{
+		"status":  status,
+		"message": message,
+		"data":    data,
+	})
 }

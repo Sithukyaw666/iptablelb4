@@ -1,5 +1,4 @@
 # Iptablelb4
-
 **iptablelb4** is a Layer 4 TCP load balancer built using Linux's `iptables` utilities. The project provides a straightforward API to manage load balancing rules for TCP traffic between backend servers. Users can easily configure backend server IP addresses, application ports, and select a load balancing algorithm (either Round Robin or Random). The API offers a user-friendly interface that simplifies the configuration of TCP traffic distribution across multiple servers, eliminating the need to manually work with complex `iptables` rules.
 
 ## Features
@@ -49,7 +48,9 @@
 
 ```json
 {
-    "Data": "Loadbalancing rule configured successfully"
+	"data": null,
+	"message": "Loadbalancing rule for web-server configured successfully",
+	"status": "success"
 }
 ```
 
@@ -60,9 +61,11 @@
 
 ```json
 {
-    "Data": [
-        "web-server"
-    ]
+	"data": [
+		"web-server"
+	],
+	"message": "Listed all the backend server farms",
+	"status": "success"
 }
 ```
 
@@ -73,20 +76,18 @@
 
 ```json
 {
-    "Data": {
-        "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
-        "algorithm": "round-robin",
-        "server-farm": "web-server"
-    }
+	"data": {
+		"upstreams": [
+			{
+			"ipaddress": "172.16.251.231",
+			"port": "8000"
+			}
+		],
+		"algorithm": "random",
+		"server-farm": "web-server"
+	},
+	"message": "Listed all the backend servers",
+	"status": "success"
 }
 ```
 
@@ -120,7 +121,9 @@
 
 ```json
 {
-    "Data": "Loadbalancing rule updated successfully"
+	"data": null,
+	"message": "Loadbalancing rule for web-server updated successfully",
+	"status": "success"
 }
 ```
 #### `/api/v1/iptables/delete/<farm>`
@@ -130,7 +133,9 @@
 
 ```json
 {
-    "Data": "Loadbalancing rule deleted successfully"
+	"data": null,
+	"message": "Loadbalancing rule for web-server deleted successfully",
+	"status": "success"
 }
 ```
 
