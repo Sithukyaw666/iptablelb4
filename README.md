@@ -27,8 +27,7 @@
 
 ```json
 {
-    "Data": {
-        "upstreams": [
+    "upstreams": [
             {
                 "ipaddress": "192.168.100.110",
                 "port": "8080"
@@ -38,9 +37,8 @@
                 "port": "8080"
             }
         ],
-        "algorithm": "round-robin",
-        "server-farm": "web-server"
-    }
+    "algorithm": "round-robin",
+    "server-farm": "web-server"
 }
 ```
 
@@ -76,18 +74,18 @@
 
 ```json
 {
-	"data": {
-		"upstreams": [
-			{
-			"ipaddress": "172.16.251.231",
-			"port": "8000"
-			}
-		],
-		"algorithm": "random",
-		"server-farm": "web-server"
-	},
-	"message": "Listed all the backend servers",
-	"status": "success"
+    "upstreams": [
+            {
+                "ipaddress": "192.168.100.110",
+                "port": "8080"
+            },
+            {
+                "ipaddress": "192.168.100.111",
+                "port": "8080"
+            }
+        ],
+    "algorithm": "round-robin",
+    "server-farm": "web-server"
 }
 ```
 
