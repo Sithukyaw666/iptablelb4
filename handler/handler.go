@@ -64,7 +64,7 @@ func (ipt *iptableHandler) AddRule(c *gin.Context) {
 	}
 	upStreamLength := len(request.Upstreams)
 	for i, server := range request.Upstreams {
-		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, server.IpAddress, server.Port, request.Algorithm)
+		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, server.IpAddress, server.Port, request.Algorithm, request.Port)
 		if err := ipt.ipt.AppendUnique("nat", chainName, ingress...); err != nil {
 			logrus.Error("Can't append ingress rule to iptables", err)
 			return
@@ -104,14 +104,14 @@ func (ipt *iptableHandler) ListFarmByName(c *gin.Context) {
 	response := new(model.Request)
 	var algorithm string
 	for _, rule := range rules[1:] {
-		mode, ip, port, err := utils.ExtractModeAndDestination(rule)
+		mode, lport, ip, dport, err := utils.ExtractModeAndDestination(rule)
 		if err != nil {
 			logrus.Error("Can't extract the required fields", err)
 		}
 		upstream := new(model.Upstreams)
 
 		upstream.IpAddress = ip
-		upstream.Port = port
+		upstream.Port = dport
 
 		response.Upstreams = append(response.Upstreams, *upstream)
 
@@ -120,9 +120,9 @@ func (ipt *iptableHandler) ListFarmByName(c *gin.Context) {
 		} else {
 			algorithm = mode
 		}
+		response.Port = lport
 
 	}
-
 	response.ServerFarm = chainName
 	response.Algorithm = algorithm
 
@@ -144,7 +144,7 @@ func (ipt *iptableHandler) UpdateRule(c *gin.Context) {
 	}
 	upStreamLength := len(request.Upstreams)
 	for i, server := range request.Upstreams {
-		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, server.IpAddress, server.Port, request.Algorithm)
+		ingress, egress := utils.GenerateIptablerules(i, upStreamLength, server.IpAddress, server.Port, request.Algorithm, request.Port)
 		if err := ipt.ipt.AppendUnique("nat", chainName, ingress...); err != nil {
 			logrus.Error("Can't append ingress rule to iptables", err)
 			return

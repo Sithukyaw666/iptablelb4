@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GenerateIptablerules(index, length int, dip, dport, algorithm string) ([]string, []string) {
+func GenerateIptablerules(index, length int, dip, dport, algorithm, port string) ([]string, []string) {
 
 	destination := fmt.Sprintf("%s:%s", dip, dport)
 
@@ -31,7 +31,7 @@ func GenerateIptablerules(index, length int, dip, dport, algorithm string) ([]st
 			"--match", "statistic",
 			"--mode", "nth",
 			"--every", traffic,
-			"--dport", dport,
+			"--dport", port,
 			"--packet", "0",
 			"-j", "DNAT",
 			"--to-destination", destination,
@@ -63,23 +63,30 @@ func IsPredefinedChain(chain string) bool {
 	return false
 }
 
-func ExtractModeAndDestination(input string) (string, string, string, error) {
+func ExtractModeAndDestination(input string) (string, string, string, string, error) {
 	// Regular expression to match --mode
 	modeRegex := regexp.MustCompile(`--mode\s+(\w+)`)
 	modeMatch := modeRegex.FindStringSubmatch(input)
 	if len(modeMatch) < 2 {
-		return "", "", "", fmt.Errorf("mode not found")
+		return "", "", "", "", fmt.Errorf("mode not found")
 	}
 
 	// Regular expression to match --to-destination IP and port
 	destRegex := regexp.MustCompile(`--to-destination\s+(\d+\.\d+\.\d+\.\d+):(\d+)`)
 	destMatch := destRegex.FindStringSubmatch(input)
 	if len(destMatch) < 3 {
-		return "", "", "", fmt.Errorf("destination not found")
+		return "", "", "", "", fmt.Errorf("destination not found")
+	}
+
+	listenRegex := regexp.MustCompile(`--dport\s+(\d+)`)
+	listenMatch := listenRegex.FindStringSubmatch(input)
+
+	if len(listenMatch) < 2 {
+		return "", "", "", "", fmt.Errorf("destination not found")
 	}
 
 	// Return the extracted values
-	return modeMatch[1], destMatch[1], destMatch[2], nil
+	return modeMatch[1], listenMatch[1], destMatch[1], destMatch[2], nil
 }
 func EnableIPForwarding() error {
 	filePath := "/proc/sys/net/ipv4/ip_forward"
