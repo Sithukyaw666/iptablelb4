@@ -8,6 +8,29 @@
   - **Round Robin**: Distributes requests evenly across all available backend servers.
   - **Random**: Randomly selects a backend server for each incoming TCP connection.
 
+## Installation
+-   **Clone the Repository:** Open your terminal and clone the repository using the following command:
+    
+    ```bash
+    git clone https://github.com/Sithukyaw666/iptablelb4.git
+    ``` 
+    
+-   **Navigate to the Project Directory:** After cloning the repository, change into the project directory:
+    
+    ```bash
+    cd iptablelb4
+    ``` 
+    
+-   **Run the Installation Script:** Make the installation script executable (if not already executable) and run it:
+    
+    ```bash 
+    chmod +x install.sh
+    ./install.sh
+    ``` 
+    
+    The script will install the necessary dependencies and set up the project.
+    
+
 ## API Endpoints
 
 #### `/api/v1/iptables/health`
@@ -27,18 +50,19 @@
 
 ```json
 {
-    "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
-    "algorithm": "round-robin",
-    "server-farm": "web-server"
+  "upstreams": [
+    {
+      "ipaddress": "192.168.100.110",
+      "port": "9090"
+    },
+    {
+      "ipaddress": "192.168.100.111",
+      "port": "7070"
+    }
+  ],
+  "port": "8080",
+  "algorithm": "round-robin",
+  "server-farm": "web-server"
 }
 ```
 
@@ -74,18 +98,23 @@
 
 ```json
 {
+  "data": {
     "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
+      {
+        "ipaddress": "192.168.100.110",
+        "port": "9090"
+      },
+      {
+        "ipaddress": "192.168.100.111",
+        "port": "7070"
+      }
+    ],
     "algorithm": "round-robin",
-    "server-farm": "web-server"
+    "server-farm": "web-server",
+    "port": "8080"
+  },
+  "message": "Listed all the backend servers",
+  "status": "success"
 }
 ```
 
@@ -98,20 +127,19 @@
 
 ```json
 {
-    "Data": {
-        "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
-        "algorithm": "round-robin",
-        "server-farm": "web-server"
+  "upstreams": [
+    {
+      "ipaddress": "192.168.100.110",
+      "port": "9090"
+    },
+    {
+      "ipaddress": "192.168.100.111",
+      "port": "7070"
     }
+  ],
+  "port": "8080",
+  "algorithm": "round-robin",
+  "server-farm": "web-server"
 }
 ```
 
