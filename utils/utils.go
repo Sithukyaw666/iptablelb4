@@ -43,7 +43,7 @@ func GenerateIptablerules(index, length int, dip, dport, algorithm, port string)
 			"--match", "statistic",
 			"--mode", "random",
 			"--probability", probability,
-			"--dport", dport,
+			"--dport", port,
 			"-j", "DNAT",
 			"--to-destination", destination,
 		}
