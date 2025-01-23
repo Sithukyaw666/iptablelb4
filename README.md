@@ -9,26 +9,13 @@
   - **Random**: Randomly selects a backend server for each incoming TCP connection.
 
 ## Installation
--   **Clone the Repository:** Open your terminal and clone the repository using the following command:
-    
-    ```bash
-    git clone https://github.com/Sithukyaw666/iptablelb4.git
-    ``` 
-    
--   **Navigate to the Project Directory:** After cloning the repository, change into the project directory:
-    
-    ```bash
-    cd iptablelb4
-    ``` 
-    
--   **Run the Installation Script:** Make the installation script executable (if not already executable) and run it:
-    
-    ```bash 
-    chmod +x install.sh
-    ./install.sh
-    ``` 
-    
-    The script will install the necessary dependencies and set up the project.
+
+The project provides an installation script that is a convenient way to install it as a service on systemd.  To install **iptablelb4** using this method, just run:
+
+``` bash
+curl -sfL https://raw.githubusercontent.com/Sithukyaw666/iptablelb4/refs/heads/main/install.sh | bash -
+```
+The script will install the necessary binary and set up the iptablelb4 as a service.
     
 
 ## API Endpoints
