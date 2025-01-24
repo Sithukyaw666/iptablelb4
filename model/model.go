@@ -8,6 +8,6 @@ type Upstreams struct {
 type Request struct {
 	Upstreams  []Upstreams `json:"upstreams"`
 	Algorithm  string      `json:"algorithm"`
-	ServerFarm string      `json:"server-farm"`
+	ServerFarm string      `json:"server_farm"`
 	Port       string      `json:"port"`
 }

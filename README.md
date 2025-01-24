@@ -8,6 +8,16 @@
   - **Round Robin**: Distributes requests evenly across all available backend servers.
   - **Random**: Randomly selects a backend server for each incoming TCP connection.
 
+## Installation
+
+The project provides an installation script that is a convenient way to install it as a service on systemd.  To install **iptablelb4** using this method, just run:
+
+``` bash
+curl -sfL https://raw.githubusercontent.com/Sithukyaw666/iptablelb4/refs/heads/main/install.sh | bash -
+```
+The script will install the necessary binary and set up the iptablelb4 as a service.
+    
+
 ## API Endpoints
 
 #### `/api/v1/iptables/health`
@@ -27,18 +37,19 @@
 
 ```json
 {
-    "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
-    "algorithm": "round-robin",
-    "server-farm": "web-server"
+  "upstreams": [
+    {
+      "ipaddress": "192.168.100.110",
+      "port": "9090"
+    },
+    {
+      "ipaddress": "192.168.100.111",
+      "port": "7070"
+    }
+  ],
+  "port": "8080",
+  "algorithm": "round-robin",
+  "server-farm": "web-server"
 }
 ```
 
@@ -74,18 +85,23 @@
 
 ```json
 {
+  "data": {
     "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
+      {
+        "ipaddress": "192.168.100.110",
+        "port": "9090"
+      },
+      {
+        "ipaddress": "192.168.100.111",
+        "port": "7070"
+      }
+    ],
     "algorithm": "round-robin",
-    "server-farm": "web-server"
+    "server-farm": "web-server",
+    "port": "8080"
+  },
+  "message": "Listed all the backend servers",
+  "status": "success"
 }
 ```
 
@@ -98,20 +114,19 @@
 
 ```json
 {
-    "Data": {
-        "upstreams": [
-            {
-                "ipaddress": "192.168.100.110",
-                "port": "8080"
-            },
-            {
-                "ipaddress": "192.168.100.111",
-                "port": "8080"
-            }
-        ],
-        "algorithm": "round-robin",
-        "server-farm": "web-server"
+  "upstreams": [
+    {
+      "ipaddress": "192.168.100.110",
+      "port": "9090"
+    },
+    {
+      "ipaddress": "192.168.100.111",
+      "port": "7070"
     }
+  ],
+  "port": "8080",
+  "algorithm": "round-robin",
+  "server-farm": "web-server"
 }
 ```
 
